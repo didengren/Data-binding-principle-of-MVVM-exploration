@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>demo</title>
+</head>
+<body>
+<div id="app">
+  <input type="text" v-model="text">
+  {{text}}
+  <p @click="clkFn1">{{text1}}</p>
+</div>
+<script src="./js/vue.js"></script>
+<script>
+// 实例化
+new Vue({
+  el: "app",
+  data: {
+    text: '请输入...',
+    text1: '你的名字'
+  },
+  watch: {
+    text: function(newVal, vm){
+      vm.text = newVal
+    }
+  },
+  methods: {
+    clkFn: function(){
+      console.log('clkFn')
+    },
+    clkFn1: function(){
+      console.log(this.text1)
+    }
+  }
+})
+</script>
+</body>
+</html>
