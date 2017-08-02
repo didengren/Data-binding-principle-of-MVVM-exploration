@@ -25,11 +25,11 @@ new Vue({
     }
   },
   methods: {
-    clkFn: function(){
+    clkFn: function(vm){
       console.log('clkFn')
     },
-    clkFn1: function(){
-      console.log(this.text1)
+    clkFn1: function(vm){
+      console.log(vm.text1)
     }
   }
 })
