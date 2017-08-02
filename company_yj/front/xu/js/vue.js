@@ -2,7 +2,7 @@
  * 订阅器/依赖
  */
 function Dep(){
-  this.subs = []
+  this.subs = [] //由于Watcher每次实例化时添加的__watcher__，用完就删除掉 保证了每次只有一个订阅者更新 也就是每次只有一个节点刷新其他节点没有刷新
 }
 Dep.prototype = {
   addSub: function(sub){
@@ -23,17 +23,16 @@ Dep.prototype = {
 function Observer(dataObj, vm){
   Object.keys(dataObj).forEach(function(key){
     var dep = new Dep()
-    Object.defineProperty(vm, key, {
+    Object.defineProperty(vm, key, { //vm[key]
       get: function(){
         if(Dep.__watcher__)
-          dep.addSub(Dep.__watcher__)
+          dep.addSub(Dep.__watcher__) //数据池每一次变化就添加一个订阅者
         return dataObj[key]
       },
       set: function(newVal){
         if(newVal === dataObj[key]) return
         dataObj[key] = newVal
-        dep.notify()
-        vm.$watch(key, newVal)
+        dep.notify() //数据池每一次变化就通知订阅者更新节点内容
       }
     })
   })
@@ -45,7 +44,7 @@ function Observer(dataObj, vm){
  */
 function Vue(options){
   this.data = options.data
-  this.$methods = options.methods
+  this.methods = options.methods
   // this.initMethods(this.$methods)
   new Observer(this.data, this)
   this.watch = options.watch
@@ -55,13 +54,28 @@ function Vue(options){
 /*
  * 定义实例方法
  * $watch 监听
+ * $methods 方法处理器
  */
 Vue.prototype = {
-  $watch: function(key ,newVal){
-    if(this[key] == this.watch[key]){
-      this.watch[key](newVal, this)
-    }
+  $watch: function(node){
+    var vm = this
+    node.addEventListener('input', function(e){
+      var newVal = e.target.value
+      for(var item in vm.watch){
+        if(vm.watch[item]){
+          vm.watch[item](newVal, vm)
+        }
+      }
+    })
   },
+  $methods: function(node, attrEvent){
+    var vm = this
+    var eventName = attrEvent.nodeName.split('@')[1]
+    var eventFn = attrEvent.nodeValue
+    node.addEventListener(eventName, function(e){
+      vm.methods[eventFn](vm)
+    })
+  }
   // initMethods: function(methods){
   //   this[key] = methods[key]==null?null:this.bind(methods[key])
   // },
@@ -112,19 +126,10 @@ Compile.prototype = {
         var vModelVal = attrList[i].nodeValue
         //初始化
         new Watcher(vm, vModelVal, node)
-        //走观察者路线
-        node.addEventListener('input', function(e){
-          var newVal = e.target.value
-          for(var item in vm.watch){
-            vm.watch[item](newVal, vm)
-          }
-        })
-        node.value = vm[vModelVal];
+        vm.$watch(node)
         node.removeAttribute('v-model')
       }else if(attrList[i].nodeName.indexOf('@')>-1){
-        var eventName = attrList[i].nodeName
-        var eventFn = attrList[i].nodeValue
-        resolveEvent(node, eventName, eventFn, vm)
+        vm.$methods(node, attrList[i])
       }
     }
   },
@@ -136,18 +141,6 @@ Compile.prototype = {
       new Watcher(vm, nvName, node)
     }
   }
-}
-
-function resolveEvent(node, eventName, eventFn, vm){
-  if(eventName == '@click'){
-    listenClick(node, eventFn, vm)
-  }
-}
-function listenClick(node, eventFn, vm){
-  node.addEventListener('click', function(e){
-    vm[eventFn] = vm.$methods[eventFn]
-    vm[eventFn]()
-  })
 }
 
 /*
