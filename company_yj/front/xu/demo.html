@@ -8,7 +8,8 @@
 <div id="app">
   <input type="text" v-model="text">
   {{text}}
-  <p @click="clkFn1">{{text1}}</p>
+  <p @click="clkFn">{{clk1}}</p>
+  <p @click="clkFn1">{{clk2}}</p>
 </div>
 <script src="./js/vue.js"></script>
 <script>
@@ -17,7 +18,8 @@ new Vue({
   el: "app",
   data: {
     text: '请输入...',
-    text1: '你的名字'
+    clk1: '调用方法1',
+    clk2: '调用方法2',
   },
   watch: {
     text: function(newVal, vm){
@@ -25,11 +27,11 @@ new Vue({
     }
   },
   methods: {
-    clkFn: function(vm){
-      console.log('clkFn')
+    clkFn: function(){
+      console.log(this.clk1)
     },
-    clkFn1: function(vm){
-      console.log(vm.text1)
+    clkFn1: function(){
+      console.log(this.clk2)
     }
   }
 })
