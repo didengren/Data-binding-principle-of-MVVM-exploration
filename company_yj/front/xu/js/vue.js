@@ -40,23 +40,31 @@ function Observer(dataObj, vm){
 
 /*
  * MVVM类 Vue
- * @param object{el//元素id, data//数据池 {text}, watch//事件监听处理对象}
+ * @param options{el//元素id, data//数据池 {text}, watch//事件监听处理对象}
  */
 function Vue(options){
   this.data = options.data
-  this.methods = options.methods
-  // this.initMethods(this.$methods)
-  new Observer(this.data, this)
+  this.bind(options.methods)
   this.watch = options.watch
+  new Observer(this.data, this)
   var parentNode = document.getElementById(options.el)
   new Compile(parentNode, this)
 }
 /*
  * 定义实例方法
- * $watch 监听
+ * bind 将实例中methods里的键值对绑定到this里
+ * $watch 监听处理器
  * $methods 方法处理器
  */
 Vue.prototype = {
+  bind: function(obj){
+    var vm = this
+    var _vm = {}
+    Object.keys(obj).forEach(function(key){
+      _vm[key] = obj[key]
+    })
+    vm = Object.assign(vm, _vm)
+  },
   $watch: function(node){
     var vm = this
     node.addEventListener('input', function(e){
@@ -73,7 +81,7 @@ Vue.prototype = {
     var eventName = attrEvent.nodeName.split('@')[1]
     var eventFn = attrEvent.nodeValue
     node.addEventListener(eventName, function(e){
-      vm.methods[eventFn](vm)
+      vm[eventFn]()
     })
   }
   // initMethods: function(methods){
